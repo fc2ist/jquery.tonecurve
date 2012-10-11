@@ -105,7 +105,7 @@
 
   default_settings =
     channel: 'rgb',
-    input: [ [128, 64] ],
+    input: [ [0,0], [128, 64], [255,255] ],
     origin: false
 
 
