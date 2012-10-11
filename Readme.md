@@ -9,8 +9,10 @@ A tone-curve effect plugin for jQuery
 var ch, input;
 ch = 'rgb';
 input = [
+  [0, 0],
   [64, 32],
-  [192, 160]
+  [192, 160],
+  [255, 255]
 ];
 $('img').tonecurve(ch, input);
 ~~~~~
