@@ -57,6 +57,18 @@ input = {
 };
 ~~~~~
 
+####Use .acv file (Photoshop)
+Load [jDataView](https://github.com/vjeux/jDataView)
+~~~~~
+<script type="text/javascript" src="path/jdataview.js"></script>
+~~~~~
+
+Write path of .acv file to 1st argument
+
+~~~~~
+$('img').tonecurve('path/myeffect.acv');
+~~~~~
+
 ##Support
 IE9+ and the others
 
@@ -67,6 +79,6 @@ Licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.
 ----
 
 ##Author
-*moi*  
-Twitter: @moi_fc2  
+*moi*
+Twitter: @moi_fc2
 Blog: http://damepo.me

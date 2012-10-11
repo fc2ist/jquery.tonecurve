@@ -3,32 +3,27 @@
 <head>
 	<meta charset="UTF-8">
 	<title>jQuery Tone Curve Demo</title>
+	<style type="text/css">
+  	#graph {
+    	width: 600px;
+    	height: 600px;
+  	}
+	</style>
 </head>
 <body>
 
 <img id="demo" src="demo.jpg" />
 <img src="demo.jpg" />
+<div id="graph"></div>
 
 <script type="text/javascript" src="js/jquery.min.js"></script>
 <script type="text/javascript" src="js/jquery.tonecurve.js"></script>
+<script type="text/javascript" src="js/jdataview.js"></script>
 
 <script type="text/javascript">
 $(function() {
   var $demo = $('#demo');
-  $demo.tonecurve({
-    rg: [
-      [0,0],
-      [64,50],
-      [192,205],
-      [255,255]
-    ],
-    b: [
-      [0,0],
-      [64,78],
-      [192,178],
-      [255,255]
-    ]
-  });
+  $demo.tonecurve('acv/02.acv');
 });
 </script>
 

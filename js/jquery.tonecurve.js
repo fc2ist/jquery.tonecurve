@@ -1,7 +1,9 @@
-/*! jQuery Tone Curve - v0.2.1 - 2012-10-11
+/*! jQuery Tone Curve - v0.3.0 - 2012-10-12
 * Copyright (c) 2012 moi; Licensed MIT */
+
+
 (function($) {
-  var ToneCurve, default_settings;
+  var MonotonicCubicSpline, ToneCurve, getACV;
   ToneCurve = (function() {
     var activate, attach, createContext, createCurve, createImageData, depth, getSize;
 
@@ -10,11 +12,12 @@
       this.target = target;
       this.config = config;
       $target = $(this.target);
-      if (this.config.origin) {
-        origin = $target.data('tonecurve');
-        if (origin) {
-          this.target.src = origin;
-        }
+      origin = $target.data('tonecurve');
+      if (!origin) {
+        $target.data('tonecurve', this.target.src);
+      }
+      if (origin && this.config.origin) {
+        this.target.src = origin;
       }
       $target.imagesLoaded($.proxy(activate, this));
     }
@@ -36,6 +39,27 @@
       };
       for (k in p) {
         v = p[k];
+        if (k.length > 1) {
+          continue;
+        }
+        if (k.match(/r/i)) {
+          input.r = v;
+        }
+        if (k.match(/g/i)) {
+          input.g = v;
+        }
+        if (k.match(/b/i)) {
+          input.b = v;
+        }
+        if (k.match(/a/i)) {
+          input.a = v;
+        }
+      }
+      for (k in p) {
+        v = p[k];
+        if (k.length < 2) {
+          continue;
+        }
         if (!input.r && k.match(/r/i)) {
           input.r = v;
         }
@@ -85,32 +109,21 @@
       return true;
     };
 
-    createCurve = function(p) {
-      var Lk_x, Lx, d, j, k, len, _i, _j, _k, _l, _m, _n;
-      len = p.length;
-      Lk_x = new Array(depth);
-      for (d = _i = 0; 0 <= depth ? _i < depth : _i > depth; d = 0 <= depth ? ++_i : --_i) {
-        Lk_x[d] = new Array(len);
-        for (j = _j = 0; 0 <= len ? _j < len : _j > len; j = 0 <= len ? ++_j : --_j) {
-          Lk_x[d][j] = 1;
-        }
-        for (j = _k = 0; 0 <= len ? _k < len : _k > len; j = 0 <= len ? ++_k : --_k) {
-          for (k = _l = 0; 0 <= len ? _l < len : _l > len; k = 0 <= len ? ++_l : --_l) {
-            if (j === k) {
-              continue;
-            }
-            Lk_x[d][k] *= (d - p[j][0]) / (p[k][0] - p[j][0]);
-          }
-        }
+    createCurve = function(input) {
+      var cdf, d, f, i, p, x, y, _i, _j, _ref;
+      f = [];
+      x = [];
+      y = [];
+      for (i = _i = 0, _ref = input.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+        p = input[i];
+        x.push(p[0]);
+        y.push(p[1]);
       }
-      Lx = new Array(depth);
-      for (d = _m = 0; 0 <= depth ? _m < depth : _m > depth; d = 0 <= depth ? ++_m : --_m) {
-        Lx[d] = 0;
-        for (j = _n = 0; 0 <= len ? _n < len : _n > len; j = 0 <= len ? ++_n : --_n) {
-          Lx[d] += Lk_x[d][j] * p[j][1];
-        }
+      cdf = new MonotonicCubicSpline(x, y);
+      for (d = _j = 0; 0 <= depth ? _j < depth : _j > depth; d = 0 <= depth ? ++_j : --_j) {
+        f[d] = cdf.interpolate(d);
       }
-      return Lx;
+      return f;
     };
 
     createImageData = function() {
@@ -154,24 +167,139 @@
     return ToneCurve;
 
   })();
-  $.fn.tonecurve = function(input, origin) {
+  MonotonicCubicSpline = (function() {
+
+    function MonotonicCubicSpline(x, y) {
+      var alpha, beta, delta, dist, i, m, n, tau, to_fix, _i, _j, _k, _l, _len, _len1, _m, _n, _ref, _ref1, _ref2, _ref3;
+      n = x.length;
+      delta = [];
+      m = [];
+      alpha = [];
+      beta = [];
+      dist = [];
+      tau = [];
+      for (i = _i = 0, _ref = n - 1; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+        delta[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]);
+        if (i > 0) {
+          m[i] = (delta[i - 1] + delta[i]) / 2;
+        }
+      }
+      m[0] = delta[0];
+      m[n - 1] = delta[n - 2];
+      to_fix = [];
+      for (i = _j = 0, _ref1 = n - 1; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+        if (delta[i] === 0) {
+          to_fix.push(i);
+        }
+      }
+      for (_k = 0, _len = to_fix.length; _k < _len; _k++) {
+        i = to_fix[_k];
+        m[i] = m[i + 1] = 0;
+      }
+      for (i = _l = 0, _ref2 = n - 1; 0 <= _ref2 ? _l < _ref2 : _l > _ref2; i = 0 <= _ref2 ? ++_l : --_l) {
+        alpha[i] = m[i] / delta[i];
+        beta[i] = m[i + 1] / delta[i];
+        dist[i] = Math.pow(alpha[i], 2) + Math.pow(beta[i], 2);
+        tau[i] = 3 / Math.sqrt(dist[i]);
+      }
+      to_fix = [];
+      for (i = _m = 0, _ref3 = n - 1; 0 <= _ref3 ? _m < _ref3 : _m > _ref3; i = 0 <= _ref3 ? ++_m : --_m) {
+        if (dist[i] > 9) {
+          to_fix.push(i);
+        }
+      }
+      for (_n = 0, _len1 = to_fix.length; _n < _len1; _n++) {
+        i = to_fix[_n];
+        m[i] = tau[i] * alpha[i] * delta[i];
+        m[i + 1] = tau[i] * beta[i] * delta[i];
+      }
+      this.x = x.slice(0, n);
+      this.y = y.slice(0, n);
+      this.m = m;
+    }
+
+    MonotonicCubicSpline.prototype.interpolate = function(x) {
+      var h, h00, h01, h10, h11, i, t, t2, t3, y, _i, _ref;
+      for (i = _i = _ref = this.x.length - 2; _ref <= 0 ? _i <= 0 : _i >= 0; i = _ref <= 0 ? ++_i : --_i) {
+        if (this.x[i] <= x) {
+          break;
+        }
+      }
+      h = this.x[i + 1] - this.x[i];
+      t = (x - this.x[i]) / h;
+      t2 = Math.pow(t, 2);
+      t3 = Math.pow(t, 3);
+      h00 = 2 * t3 - 3 * t2 + 1;
+      h10 = t3 - 2 * t2 + t;
+      h01 = -2 * t3 + 3 * t2;
+      h11 = t3 - t2;
+      y = h00 * this.y[i] + h10 * h * this.m[i] + h01 * this.y[i + 1] + h11 * h * this.m[i + 1];
+      return y;
+    };
+
+    return MonotonicCubicSpline;
+
+  })();
+  getACV = function(path) {
+    var curve;
+    curve = {
+      rgb: [],
+      r: [],
+      g: [],
+      b: []
+    };
+    $.ajax({
+      url: path,
+      async: false,
+      dataType: 'dataview'
+    }).success(function(view) {
+      var ary, c, i, j, len, x, y, _i, _j, _results;
+      c = ['r', 'g', 'b'];
+      view.seek(4);
+      len = view.getUint16() & 0xff;
+      ary = curve.rgb;
+      ary.push([0, view.getUint16() & 0xff]);
+      view.seek(view.tell() + 2);
+      for (i = _i = 1; 1 <= len ? _i < len : _i > len; i = 1 <= len ? ++_i : --_i) {
+        y = view.getUint16() & 0xff;
+        x = view.getUint16() & 0xff;
+        ary.push([x, y]);
+      }
+      _results = [];
+      for (i = _j = 0; _j < 3; i = ++_j) {
+        len = view.getUint16() & 0xff;
+        ary = curve[c[i]];
+        _results.push((function() {
+          var _k, _results1;
+          _results1 = [];
+          for (j = _k = 0; 0 <= len ? _k < len : _k > len; j = 0 <= len ? ++_k : --_k) {
+            y = view.getUint16() & 0xff;
+            x = view.getUint16() & 0xff;
+            _results1.push(ary.push([x, y]));
+          }
+          return _results1;
+        })());
+      }
+      return _results;
+    });
+    return curve;
+  };
+  return $.fn.tonecurve = function(input, origin) {
     var config, option;
     option = {
       input: input,
       origin: origin
     };
-    if (!input) {
-      option.input = {
-        rgb: [[0, 0], [128, 64], [255, 255]]
-      };
+    config = $.extend(true, {}, option);
+    if (typeof input === 'string') {
+      if (!jDataView) {
+        return this;
+      }
+      config.input = getACV(input);
     }
-    config = $.extend(true, {}, default_settings, option);
     return this.each(function() {
       return new ToneCurve(this, config);
     });
-  };
-  return default_settings = {
-    origin: false
   };
 })(jQuery);
 

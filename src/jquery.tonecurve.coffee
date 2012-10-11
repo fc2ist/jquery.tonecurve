@@ -3,9 +3,9 @@
   class ToneCurve
     constructor:(@target, @config)->
       $target = $( @target )
-      if @config.origin
-        origin = $target.data('tonecurve')
-        if origin then @target.src = origin
+      origin = $target.data('tonecurve')
+      if !origin then $target.data('tonecurve', @target.src)
+      if origin && @config.origin then @target.src = origin
       $target.imagesLoaded( $.proxy(activate, @) )
 
     depth = 256
@@ -20,7 +20,20 @@
         g: false,
         b: false,
         a: false
+
       for k,v of p
+        if k.length > 1 then continue
+        if k.match(/r/i)
+          input.r = v
+        if k.match(/g/i)
+          input.g = v
+        if k.match(/b/i)
+          input.b = v
+        if k.match(/a/i)
+          input.a = v
+
+      for k,v of p
+        if k.length < 2 then continue
         if !input.r && k.match(/r/i)
           input.r = v
         if !input.g && k.match(/g/i)
@@ -58,26 +71,18 @@
       @context.drawImage( @target, 0, 0 )
       return true
 
-    createCurve = (p)->
-      len = p.length
-
-      Lk_x = new Array( depth )
+    createCurve = (input)->
+      f = []
+      x = []
+      y = []
+      for i in [0...input.length]
+        p = input[i]
+        x.push( p[0] )
+        y.push( p[1] )
+      cdf = new MonotonicCubicSpline(x, y)
       for d in [0...depth]
-        Lk_x[d] = new Array(len)
-        for j in [0...len]
-          Lk_x[d][j] = 1
-        for j in [0...len]
-          for k in [0...len]
-            if j == k then continue
-            Lk_x[d][k] *= (d - p[j][0]) / (p[k][0] - p[j][0])
-
-      Lx = new Array( depth )
-      for d in [0...depth]
-        Lx[d] = 0
-        for j in [0...len]
-          Lx[d] += Lk_x[d][j] * p[j][1]
-
-      return Lx
+        f[d] = cdf.interpolate(d)
+      return f
 
     createImageData = ->
       c = @config.channel
@@ -87,7 +92,7 @@
       Lx = @Lx
       imgData = ctx.getImageData(0, 0, width, height)
 
-      curve = @curve  
+      curve = @curve
 
       for y in [0...height]
         for x in [0...width]
@@ -111,20 +116,95 @@
     attach = ->
       @target.src = @dataURL
 
+  class MonotonicCubicSpline
+
+    constructor: (x, y) ->
+      n = x.length
+      delta = []; m = []; alpha = []; beta = []; dist = []; tau = []
+      for i in [0...(n - 1)]
+        delta[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i])
+        m[i] = (delta[i - 1] + delta[i]) / 2 if i > 0
+      m[0] = delta[0]
+      m[n - 1] = delta[n - 2]
+      to_fix = []
+      for i in [0...(n - 1)]
+        to_fix.push(i) if delta[i] == 0
+      for i in to_fix
+        m[i] = m[i + 1] = 0
+      for i in [0...(n - 1)]
+        alpha[i] = m[i] / delta[i]
+        beta[i]  = m[i + 1] / delta[i]
+        dist[i]  = Math.pow(alpha[i], 2) + Math.pow(beta[i], 2)
+        tau[i]   = 3 / Math.sqrt(dist[i])
+      to_fix = []
+      for i in [0...(n - 1)]
+        to_fix.push(i) if dist[i] > 9
+      for i in to_fix
+        m[i]     = tau[i] * alpha[i] * delta[i]
+        m[i + 1] = tau[i] * beta[i]  * delta[i]
+      @x = x[0...n]
+      @y = y[0...n]
+      @m = m
+
+    interpolate: (x) ->
+      for i in [(@x.length - 2)..0]
+        break if @x[i] <= x
+      h = @x[i + 1] - @x[i]
+      t = (x - @x[i]) / h
+      t2 = Math.pow(t, 2)
+      t3 = Math.pow(t, 3)
+      h00 =  2 * t3 - 3 * t2 + 1
+      h10 =      t3 - 2 * t2 + t
+      h01 = -2 * t3 + 3 * t2
+      h11 =      t3  -    t2
+      y = h00 * @y[i] +
+          h10 * h * @m[i] +
+          h01 * @y[i + 1] +
+          h11 * h * @m[i + 1]
+      return y
+
+  getACV = (path)->
+    curve =
+      rgb: [],
+      r: [],
+      g: [],
+      b: []
+    $.ajax(
+      url: path,
+      async: false,
+      dataType: 'dataview'
+    ).success((view)->
+      c = ['r', 'g', 'b']
+      view.seek( 4 )
+      len = view.getUint16() & 0xff
+      ary = curve.rgb
+      ary.push( [0, view.getUint16() & 0xff] )
+      view.seek( view.tell() + 2 )
+      for i in [1...len]
+        y = view.getUint16() & 0xff
+        x = view.getUint16() & 0xff
+        ary.push( [x, y] )
+      for i in [0...3]
+        len = view.getUint16() & 0xff
+        ary = curve[ c[i] ]
+        for j in [0...len]
+          y = view.getUint16() & 0xff
+          x = view.getUint16() & 0xff
+          ary.push( [x, y] )
+    )
+    return curve
 
   $.fn.tonecurve = (input, origin)->
-    option =
+    option = {
       input: input,
       origin: origin
-    if !input
-      option.input = { rgb: [ [0,0], [128, 64], [255,255] ] }
-    config = $.extend(true, {}, default_settings, option)
+    }
+    config = $.extend(true, {}, option)
+    if typeof input == 'string'
+      if !jDataView then return this
+      config.input = getACV(input)
     return this.each(->
       new ToneCurve( this, config )
     )
-
-  default_settings =
-    origin: false
-
 
 )(jQuery)
