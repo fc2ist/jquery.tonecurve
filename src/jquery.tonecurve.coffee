@@ -33,8 +33,6 @@
 
     createCurve = ->
       p = @config.input
-      p.unshift([0,0])
-      p.push([depth - 1, depth - 1])
       len = p.length
 
       Lk_x = new Array( depth )

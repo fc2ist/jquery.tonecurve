@@ -55,8 +55,6 @@
     createCurve = function() {
       var Lk_x, Lx, d, j, k, len, p, _i, _j, _k, _l, _m, _n;
       p = this.config.input;
-      p.unshift([0, 0]);
-      p.push([depth - 1, depth - 1]);
       len = p.length;
       Lk_x = new Array(depth);
       for (d = _i = 0; 0 <= depth ? _i < depth : _i > depth; d = 0 <= depth ? ++_i : --_i) {
