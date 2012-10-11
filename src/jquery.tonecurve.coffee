@@ -164,6 +164,7 @@
       return y
 
   getACV = (path)->
+    if !jDataView || !$.support.ajaxResponseType then return false
     curve =
       rgb: [],
       r: [],
@@ -201,8 +202,8 @@
     }
     config = $.extend(true, {}, option)
     if typeof input == 'string'
-      if !jDataView then return this
       config.input = getACV(input)
+      if !config.input then return this
     return this.each(->
       new ToneCurve( this, config )
     )

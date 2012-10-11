@@ -1,4 +1,4 @@
-/*! jQuery Tone Curve - v0.3.0 - 2012-10-12
+/*! jQuery Tone Curve - v0.3.1 - 2012-10-12
 * Copyright (c) 2012 moi; Licensed MIT */
 
 
@@ -242,6 +242,9 @@
   })();
   getACV = function(path) {
     var curve;
+    if (!jDataView || !$.support.ajaxResponseType) {
+      return false;
+    }
     curve = {
       rgb: [],
       r: [],
@@ -292,10 +295,10 @@
     };
     config = $.extend(true, {}, option);
     if (typeof input === 'string') {
-      if (!jDataView) {
+      config.input = getACV(input);
+      if (!config.input) {
         return this;
       }
-      config.input = getACV(input);
     }
     return this.each(function() {
       return new ToneCurve(this, config);

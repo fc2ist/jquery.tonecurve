@@ -57,7 +57,7 @@ input = {
 };
 ~~~~~
 
-####Use .acv file (Photoshop)
+####Use .acv file (IE9 don't supported)
 Load [jDataView](https://github.com/vjeux/jDataView)
 ~~~~~
 <script type="text/javascript" src="path/jdataview.js"></script>
