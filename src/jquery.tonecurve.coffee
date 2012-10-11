@@ -15,7 +15,6 @@
       if !createContext.call(@) then return false
 
       p = @config.input
-      console.log(p)
       input =
         r: false,
         g: false,

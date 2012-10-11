@@ -1,4 +1,4 @@
-/*! jQuery Tone Curve - v0.1.0 - 2012-10-11
+/*! jQuery Tone Curve - v0.2.0 - 2012-10-11
 * Copyright (c) 2012 moi; Licensed MIT */
 
 
@@ -24,11 +24,46 @@
     depth = 256;
 
     activate = function() {
+      var input, k, p, v;
       getSize.call(this);
       if (!createContext.call(this)) {
         return false;
       }
-      createCurve.call(this);
+      p = this.config.input;
+      input = {
+        r: false,
+        g: false,
+        b: false,
+        a: false
+      };
+      for (k in p) {
+        v = p[k];
+        if (!input.r && k.match(/r/i)) {
+          input.r = v;
+        }
+        if (!input.g && k.match(/g/i)) {
+          input.g = v;
+        }
+        if (!input.b && k.match(/b/i)) {
+          input.b = v;
+        }
+        if (!input.a && k.match(/a/i)) {
+          input.a = v;
+        }
+      }
+      this.curve = {};
+      if (input.r) {
+        this.curve.r = createCurve.call(this, input.r);
+      }
+      if (input.g) {
+        this.curve.g = createCurve.call(this, input.g);
+      }
+      if (input.b) {
+        this.curve.b = createCurve.call(this, input.b);
+      }
+      if (input.a) {
+        this.curve.a = createCurve.call(this, input.a);
+      }
       createImageData.call(this);
       return attach.call(this);
     };
@@ -52,9 +87,8 @@
       return true;
     };
 
-    createCurve = function() {
-      var Lk_x, Lx, d, j, k, len, p, _i, _j, _k, _l, _m, _n;
-      p = this.config.input;
+    createCurve = function(p) {
+      var Lk_x, Lx, d, j, k, len, _i, _j, _k, _l, _m, _n;
       len = p.length;
       Lk_x = new Array(depth);
       for (d = _i = 0; 0 <= depth ? _i < depth : _i > depth; d = 0 <= depth ? ++_i : --_i) {
@@ -78,53 +112,36 @@
           Lx[d] += Lk_x[d][j] * p[j][1];
         }
       }
-      return this.Lx = Lx;
+      return Lx;
     };
 
     createImageData = function() {
-      var A, B, G, Lx, R, c, ch, ctx, height, i, imgData, width, x, y, _i, _j;
+      var A, B, G, Lx, R, c, ctx, curve, height, i, imgData, width, x, y, _i, _j;
       c = this.config.channel;
       width = this.width;
       height = this.height;
       ctx = this.context;
       Lx = this.Lx;
       imgData = ctx.getImageData(0, 0, width, height);
-      ch = {
-        r: false,
-        g: false,
-        b: false,
-        a: false
-      };
-      if (c.match(/r/i)) {
-        ch.r = true;
-      }
-      if (c.match(/g/i)) {
-        ch.g = true;
-      }
-      if (c.match(/b/i)) {
-        ch.b = true;
-      }
-      if (c.match(/a/i)) {
-        ch.a = true;
-      }
+      curve = this.curve;
       for (y = _i = 0; 0 <= height ? _i < height : _i > height; y = 0 <= height ? ++_i : --_i) {
         for (x = _j = 0; 0 <= width ? _j < width : _j > width; x = 0 <= width ? ++_j : --_j) {
           i = (y * width + x) * 4;
-          if (ch.r) {
+          if (curve.r) {
             R = imgData.data[i];
-            imgData.data[i] = Math.round(Lx[R]);
+            imgData.data[i] = Math.round(curve.r[R]);
           }
-          if (ch.g) {
+          if (curve.g) {
             G = imgData.data[i + 1];
-            imgData.data[i + 1] = Math.round(Lx[G]);
+            imgData.data[i + 1] = Math.round(curve.g[G]);
           }
-          if (ch.b) {
+          if (curve.b) {
             B = imgData.data[i + 2];
-            imgData.data[i + 2] = Math.round(Lx[B]);
+            imgData.data[i + 2] = Math.round(curve.b[B]);
           }
-          if (ch.a) {
+          if (curve.a) {
             A = imgData.data[i + 3];
-            imgData.data[i + 3] = Math.round(Lx[A]);
+            imgData.data[i + 3] = Math.round(curve.a[A]);
           }
         }
       }
@@ -139,20 +156,23 @@
     return ToneCurve;
 
   })();
-  $.fn.tonecurve = function(channel, input) {
+  $.fn.tonecurve = function(input, origin) {
     var config, option;
     option = {
-      channel: channel,
-      input: input
+      input: input,
+      origin: origin
     };
+    if (!input) {
+      option.input = {
+        rgb: [[0, 0], [128, 64], [255, 255]]
+      };
+    }
     config = $.extend(true, {}, default_settings, option);
     return this.each(function() {
       return new ToneCurve(this, config);
     });
   };
   return default_settings = {
-    channel: 'rgb',
-    input: [[128, 64]],
     origin: false
   };
 })(jQuery);
