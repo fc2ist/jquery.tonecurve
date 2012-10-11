@@ -14,10 +14,20 @@
 
 <script type="text/javascript">
 $(function() {
-  var input = [
-    [0,255], [255,0]
-  ];
-  $('#demo').tonecurve('rgb', input);
+  var $demo = $('#demo');
+  $demo
+  .tonecurve('rg', [
+    [0,0],
+    [64,50],
+    [192,205],
+    [255,255]
+  ])
+  .tonecurve('b', [
+    [0,0],
+    [64,78],
+    [192,178],
+    [255,255]
+  ]);
 });
 </script>
 
