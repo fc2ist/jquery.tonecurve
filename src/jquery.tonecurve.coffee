@@ -45,8 +45,8 @@
       attach.call(@)
 
     getSize = ->
-      @width = @target.width
-      @height = @target.height
+      @width = @target.naturalWidth || @target.width
+      @height = @target.naturalHeight || @target.height
 
     createContext = ->
       canvas = document.createElement('canvas')

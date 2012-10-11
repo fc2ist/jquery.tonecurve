@@ -1,7 +1,5 @@
-/*! jQuery Tone Curve - v0.2.0 - 2012-10-11
+/*! jQuery Tone Curve - v0.2.1 - 2012-10-11
 * Copyright (c) 2012 moi; Licensed MIT */
-
-
 (function($) {
   var ToneCurve, default_settings;
   ToneCurve = (function() {
@@ -69,8 +67,8 @@
     };
 
     getSize = function() {
-      this.width = this.target.width;
-      return this.height = this.target.height;
+      this.width = this.target.naturalWidth || this.target.width;
+      return this.height = this.target.naturalHeight || this.target.height;
     };
 
     createContext = function() {
