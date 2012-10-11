@@ -13,7 +13,35 @@
     activate = ->
       getSize.call(@)
       if !createContext.call(@) then return false
-      createCurve.call(@)
+
+      p = @config.input
+      console.log(p)
+      input =
+        r: false,
+        g: false,
+        b: false,
+        a: false
+      for k,v of p
+        if !input.r && k.match(/r/i)
+          input.r = v
+        if !input.g && k.match(/g/i)
+          input.g = v
+        if !input.b && k.match(/b/i)
+          input.b = v
+        if !input.a && k.match(/a/i)
+          input.a = v
+
+      @curve = {}
+
+      if input.r
+        @curve.r = createCurve.call(@, input.r)
+      if input.g
+        @curve.g = createCurve.call(@, input.g)
+      if input.b
+        @curve.b = createCurve.call(@, input.b)
+      if input.a
+        @curve.a = createCurve.call(@, input.a)
+
       createImageData.call(@)
       attach.call(@)
 
@@ -31,8 +59,7 @@
       @context.drawImage( @target, 0, 0 )
       return true
 
-    createCurve = ->
-      p = @config.input
+    createCurve = (p)->
       len = p.length
 
       Lk_x = new Array( depth )
@@ -51,7 +78,7 @@
         for j in [0...len]
           Lx[d] += Lk_x[d][j] * p[j][1]
 
-      @Lx = Lx
+      return Lx
 
     createImageData = ->
       c = @config.channel
@@ -61,31 +88,23 @@
       Lx = @Lx
       imgData = ctx.getImageData(0, 0, width, height)
 
-      ch =
-        r: false,
-        g: false,
-        b: false,
-        a: false
-      if c.match(/r/i) then ch.r = true
-      if c.match(/g/i) then ch.g = true
-      if c.match(/b/i) then ch.b = true
-      if c.match(/a/i) then ch.a = true
+      curve = @curve  
 
       for y in [0...height]
         for x in [0...width]
           i = (y * width + x) * 4
-          if ch.r
+          if curve.r
             R = imgData.data[ i ]
-            imgData.data[ i ] = Math.round( Lx[R] )
-          if ch.g
+            imgData.data[ i ] = Math.round( curve.r[R] )
+          if curve.g
             G = imgData.data[ i + 1 ]
-            imgData.data[ i + 1 ] = Math.round( Lx[G] )
-          if ch.b
+            imgData.data[ i + 1 ] = Math.round( curve.g[G] )
+          if curve.b
             B = imgData.data[ i + 2 ]
-            imgData.data[ i + 2 ] = Math.round( Lx[B] )
-          if ch.a
+            imgData.data[ i + 2 ] = Math.round( curve.b[B] )
+          if curve.a
             A = imgData.data[ i + 3 ]
-            imgData.data[ i + 3 ] = Math.round( Lx[A] )
+            imgData.data[ i + 3 ] = Math.round( curve.a[A] )
 
       ctx.putImageData(imgData, 0, 0)
       @dataURL = @canvas.toDataURL()
@@ -94,18 +113,18 @@
       @target.src = @dataURL
 
 
-  $.fn.tonecurve = (channel, input)->
+  $.fn.tonecurve = (input, origin)->
     option =
-      channel: channel,
-      input: input
+      input: input,
+      origin: origin
+    if !input
+      option.input = { rgb: [ [0,0], [128, 64], [255,255] ] }
     config = $.extend(true, {}, default_settings, option)
     return this.each(->
       new ToneCurve( this, config )
     )
 
   default_settings =
-    channel: 'rgb',
-    input: [ [0,0], [128, 64], [255,255] ],
     origin: false
 
 

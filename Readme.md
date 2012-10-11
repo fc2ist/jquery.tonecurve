@@ -6,31 +6,55 @@ A tone-curve effect plugin for jQuery
 
 ##Usage
 ~~~~~
-var ch, input;
-ch = 'rgb';
-input = [
-  [0, 0],
-  [64, 32],
-  [192, 160],
-  [255, 255]
-];
-$('img').tonecurve(ch, input);
+var input;
+
+input = {
+  rgb: [
+    [0, 0],
+    [64, 32],
+    [192, 160],
+    [255, 255]
+  ]
+};
+
+$('img').tonecurve(input);
 ~~~~~
 
 ###Channel option
 ####Single channel
 ~~~~~
-ch = 'r';
+input = {
+  r: [
+    [0, 0],
+    [64, 32],
+    [192, 160],
+    [255, 255]
+  ]
+};
 ~~~~~
 
 ####Multiple channel
 ~~~~~
-ch = 'rb';
+input = {
+  rb: [
+    [0, 0],
+    [64, 32],
+    [192, 160],
+    [255, 255]
+  ]
+};
 ~~~~~
 
 ####Alpha channel
 ~~~~~
-ch = 'a';
+input = {
+  a: [
+    [0, 0],
+    [64, 32],
+    [192, 160],
+    [255, 255]
+  ]
+};
 ~~~~~
 
 ##Support
