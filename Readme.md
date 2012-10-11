@@ -1,6 +1,9 @@
 #jQuery Tone Curve
 A tone-curve effect plugin for jQuery
 
+##Demo
+[http://fc2ist.github.com/jquery.tonecurve/demo.html](http://fc2ist.github.com/jquery.tonecurve/demo.html)
+
 ##Usage
 ~~~~~
 var ch, input;
