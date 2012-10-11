@@ -3,8 +3,9 @@
   class ToneCurve
     constructor:(@target, @config)->
       $target = $( @target )
-      origin = $target.data('tonecurve')
-      if origin then @target.src = origin
+      if @config.origin
+        origin = $target.data('tonecurve')
+        if origin then @target.src = origin
       $target.imagesLoaded( $.proxy(activate, @) )
 
     depth = 256
@@ -106,7 +107,8 @@
 
   default_settings =
     channel: 'rgb',
-    input: [ [128, 64] ]
+    input: [ [128, 64] ],
+    origin: false
 
 
 )(jQuery)

@@ -12,9 +12,11 @@
       this.target = target;
       this.config = config;
       $target = $(this.target);
-      origin = $target.data('tonecurve');
-      if (origin) {
-        this.target.src = origin;
+      if (this.config.origin) {
+        origin = $target.data('tonecurve');
+        if (origin) {
+          this.target.src = origin;
+        }
       }
       $target.imagesLoaded($.proxy(activate, this));
     }
@@ -152,7 +154,8 @@
   };
   return default_settings = {
     channel: 'rgb',
-    input: [[128, 64]]
+    input: [[128, 64]],
+    origin: false
   };
 })(jQuery);
 
