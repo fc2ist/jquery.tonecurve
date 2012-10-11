@@ -1,0 +1,15 @@
+{
+  "name": "jquery.tonecurve",
+  "title": "jQuery Tone Curve",
+  "description": "A tone-curve effect plugin for jQuery",
+  "version": "0.1.0",
+  "author": {
+    "name": "moi",
+    "twitter": "@moi_fc2"
+  },
+  "licenses": [
+    {
+      "type": "MIT"
+    }
+  ]
+}
