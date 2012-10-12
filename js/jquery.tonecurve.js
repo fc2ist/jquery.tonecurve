@@ -242,7 +242,8 @@
   })();
   getACV = function(path) {
     var curve;
-    if (!jDataView || !$.support.ajaxResponseType) {
+    console.log($.support);
+    if (!jDataView) {
       return false;
     }
     curve = {
@@ -257,6 +258,10 @@
       dataType: 'dataview'
     }).success(function(view) {
       var ary, c, i, j, len, x, y, _i, _j, _results;
+      if (!view) {
+        curve = false;
+        return;
+      }
       c = ['r', 'g', 'b'];
       view.seek(4);
       len = view.getUint16() & 0xff;

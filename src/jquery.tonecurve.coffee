@@ -164,7 +164,8 @@
       return y
 
   getACV = (path)->
-    if !jDataView || !$.support.ajaxResponseType then return false
+    console.log($.support)
+    if !jDataView then return false
     curve =
       rgb: [],
       r: [],
@@ -175,6 +176,9 @@
       async: false,
       dataType: 'dataview'
     ).success((view)->
+      if !view
+        curve = false
+        return
       c = ['r', 'g', 'b']
       view.seek( 4 )
       len = view.getUint16() & 0xff
