@@ -164,7 +164,6 @@
       return y
 
   getACV = (path)->
-    console.log($.support)
     if !jDataView then return false
     curve =
       rgb: [],

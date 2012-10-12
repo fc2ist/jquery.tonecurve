@@ -242,7 +242,6 @@
   })();
   getACV = function(path) {
     var curve;
-    console.log($.support);
     if (!jDataView) {
       return false;
     }
